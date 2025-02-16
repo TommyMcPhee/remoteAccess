@@ -25,6 +25,9 @@ void ofApp::setup() {
 	frameBuffer.begin();
 	ofClear(0, 0, 0, 255);
 	frameBuffer.end();
+	shader.begin();
+	shader.setUniform1fv("series", series, maxValue);
+	shader.end();
 	streamSettings.setOutListener(this);
 	streamSettings.setApi(ofSoundDevice::Api::MS_WASAPI);
 	streamSettings.sampleRate = sampleRate;
@@ -33,11 +36,11 @@ void ofApp::setup() {
 	stream.setup(streamSettings);
 }
 
-void ofApp::ofSoundStreamSetup(ofSoundStreamSettings &settings) {
+void ofApp::ofSoundStreamSetup(ofSoundStreamSettings& settings) {
 
 }
 
-void ofApp::audioOut(ofSoundBuffer &soundBuffer) {
+void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 	for (int a = 0; a < soundBuffer.getNumFrames(); a++) {
 		for (int b = 0; b < maxValue; b++) {
 			phases[b] += b;
@@ -57,6 +60,10 @@ void ofApp::audioOut(ofSoundBuffer &soundBuffer) {
 
 void ofApp::setUniforms() {
 	shader.setUniform2f("window", window);
+	shader.setUniform1fv("xData", xData, maxValue);
+	shader.setUniform1fv("yData", yData, maxValue);
+	shader.setUniform1fv("aData", aData, maxValue);
+	shader.setUniform1fv("bData", bData, maxValue);
 }
 
 //--------------------------------------------------------------
@@ -101,6 +108,21 @@ void ofApp::keyPressed(int key) {
 void ofApp::updateState(int number, int position) {
 	cout << number << " " << position << endl;
 	values[number][position] += 1;
+	float updateValue = series[values[number][position]];
+	switch(position){
+	case 0:
+		xData[number] = updateValue;
+		break;
+	case 1:
+		yData[number] = updateValue;
+		break;
+	case 2:
+		aData[number] = updateValue;
+		break;
+	case 3:
+		bData[number] = updateValue;
+		break;
+	}
 }
 
 //--------------------------------------------------------------
