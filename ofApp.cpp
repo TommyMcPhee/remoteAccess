@@ -11,22 +11,32 @@ void ofApp::setup() {
 	fillWavetable();
 	int modCount = 0;
 	int modSeries = 1;
-	for (int a = 0; a < (float)maxValue; a++) {
+	float sumTerm = 0.5;
+	for (int a = 0; a < maxValue; a++) {
 		if (modCount >= modSeries) {
-			modSeries++;
+			if ((float)a / (float)maxValue < 0.5) {
+				modSeries++;
+				sumTerm = 0.25 / (float)modSeries;
+			}
+			else {
+				modSeries--;
+				sumTerm = 0.75 / (float)modSeries;
+			}
 			modCount = 0;
 		}
-		series[a] = ((float)(modCount % modSeries) / (float)modSeries) + (0.5 / modSeries);
+		series[a][0] = ((float)(modCount % modSeries) / (float)modSeries) + sumTerm;
+		series[a][1] = (float)modSeries;
 		cout << series[a] << endl;
 		modCount++;
 	}
+
 	shader.load("remoteAccess");
 	frameBuffer.allocate(ofGetScreenWidth(), ofGetScreenHeight());
 	frameBuffer.begin();
 	ofClear(0, 0, 0, 255);
 	frameBuffer.end();
 	shader.begin();
-	shader.setUniform1fv("series", series, maxValue);
+	shader.setUniform1fv("series0", series[0], maxValue);
 	shader.end();
 	streamSettings.setOutListener(this);
 	streamSettings.setApi(ofSoundDevice::Api::MS_WASAPI);
@@ -94,8 +104,8 @@ void ofApp::keyPressed(int key) {
 		number = 0;
 		position = 0;
 		for (int a = 0; a < maxValue; a++) {
-			volumes[a] = series[values[a][1]];
-			pan[a][0] = sqrt(series[values[a][0]]);
+			volumes[a] = series[values[a][1]][0];
+			pan[a][0] = sqrt(series[values[a][0]][0]);
 			pan[a][1] = sqrt(1.0 - pan[a][0]);
 		}
 	}
@@ -108,7 +118,7 @@ void ofApp::keyPressed(int key) {
 void ofApp::updateState(int number, int position) {
 	cout << number << " " << position << endl;
 	values[number][position] += 1;
-	float updateValue = series[values[number][position]];
+	float updateValue = series[values[number][position] % 256][0];
 	switch(position){
 	case 0:
 		xData[number] = updateValue;

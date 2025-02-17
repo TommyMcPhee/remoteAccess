@@ -12,7 +12,7 @@ public:
 	ofSoundStreamSettings streamSettings;
 	ofSoundStream stream;
 	void ofSoundStreamSetup(ofSoundStreamSettings& settings);
-	float series[maxValue];
+	float series[maxValue][2];
 	void setup();
 	int number = 0, position = 0;
 	array<array<int, 4>, maxValue> values;

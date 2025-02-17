@@ -6,7 +6,7 @@ uniform sampler2DRect tex0;
 in vec2 texCoordVarying;
 out vec4 outputColor;
 uniform vec2 window;
-uniform float[256] series;
+uniform float[256] series0;
 uniform float[256] xData;
 uniform float[256] yData;
 uniform float[256] aData;
