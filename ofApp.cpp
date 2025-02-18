@@ -34,6 +34,10 @@ void ofApp::setup() {
 		series[a][0] = ((float)(modCount % modSeries) / (float)modSeries) + sumTerm;
 		series[a][1] = (float)modSeries;
 		phaseIncrements[a] = 0.5 * series[a][0] / fibonacci[(int)modSeries - 1];
+		panValue[a] = 0.5;
+		modPanValue[a] = 0.5;
+		envelopes[a] = 0.5;
+		modEnvelopes[a] = 0.5;
 		cout << phaseIncrements[a] << endl;
 		modCount++;
 	}
@@ -126,9 +130,16 @@ void ofApp::keyPressed(int key) {
 		number = 0;
 		position = 0;
 		for (int a = 0; a < maxValue; a++) {
-			volumes[a] = series[values[a][1]][0];
-			pan[a][0] = sqrt(series[values[a][0]][0]);
-			pan[a][1] = sqrt(1.0 - pan[a][0]);
+			panValue[a] = series[values[a][0] % 256][0];
+			modPanValue[a] = series[values[a][0] % 256][0];
+			envelopes[a] = abs(0.5 - panValue[a]) * 2.0;
+			modEnvelopes[a] = abs(0.5 - modPanValue[a]) * 2.0;
+			//fix volumes
+			volumes[a] = series[values[a][1] % 256][0];
+			pan[a][0] = sqrt(panValue[a]);
+			pan[a][1] = sqrt(1.0 - panValue[a]);
+			modPan[a][0] = sqrt(panValue[a]);
+			modPan[a][1] = sqrt(1.0 - panValue[a]);
 		}
 	}
 	if (key > 47 && key < 59) {
@@ -141,18 +152,18 @@ void ofApp::updateState(int number, int position) {
 	cout << number << " " << position << endl;
 	values[number][position] += 1;
 	float updateValue = series[values[number][position] % 256][0];
-	switch(position){
+	switch (position) {
 	case 0:
 		xData[number] = updateValue;
 		break;
 	case 1:
-		yData[number] = updateValue;
+		yData[number] = pow(updateValue * phaseIncrements[number], 0.25);
 		break;
 	case 2:
 		aData[number] = updateValue;
 		break;
 	case 3:
-		bData[number] = updateValue;
+		bData[number] = pow(updateValue * phaseIncrements[number], 0.25);;
 		break;
 	}
 }

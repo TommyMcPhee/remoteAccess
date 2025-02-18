@@ -20,8 +20,8 @@ public:
 	array<float, maxValue> phaseIncrements;
 	inline float averageTwo(float inA, float inB, float mix);
 	inline float lookup(float phase);
-	array<float, maxValue> volumes;
-	array<array<float, channels>, maxValue> pan;
+	array<float, maxValue> panValue, modPanValue, envelopes, modEnvelopes, volumes;
+	array<array<float, channels>, maxValue> pan, modPan;
 	array<float, channels> sample;
 	void audioOut(ofSoundBuffer& soundBuffer);
 	float width, height;

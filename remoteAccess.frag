@@ -20,10 +20,10 @@ void main()
     for(int increment = 0; increment < 256; increment++){
         floatIncrement++;
         if(normalized.x > (floatIncrement - 1.0) / 256.0 && normalized.x < floatIncrement / 256.0){
-            position.x *= series[increment];
+            position.x *= series0[increment];
         }
         if(normalized.x > (floatIncrement - 1.0) / 256.0 && normalized.x < floatIncrement / 256.0){
-            position.y *= series[increment];
+            position.y *= series0[increment];
         }
     }
     outputColor = vec4(0.0, position.x * position.y, 1.0, 1.0);
