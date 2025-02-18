@@ -9,6 +9,13 @@ constexpr void ofApp::fillWavetable() {
 
 void ofApp::setup() {
 	fillWavetable();
+	int fibonacciA = 1, fibonacciB = 1, fibonacciC = 1;
+	for (int a = 0; a < fibonacci.size(); a++) {
+		fibonacci[a] = fibonacciC;
+		fibonacciC = fibonacciA + fibonacciB;
+		fibonacciA = fibonacciB;
+		fibonacciB = fibonacciC;
+	}
 	int modCount = 0;
 	int modSeries = 1;
 	float sumTerm = 0.5;
@@ -26,7 +33,8 @@ void ofApp::setup() {
 		}
 		series[a][0] = ((float)(modCount % modSeries) / (float)modSeries) + sumTerm;
 		series[a][1] = (float)modSeries;
-		cout << series[a] << endl;
+		phaseIncrements[a] = 0.5 * series[a][0] / fibonacci[(int)modSeries - 1];
+		cout << phaseIncrements[a] << endl;
 		modCount++;
 	}
 
@@ -50,14 +58,28 @@ void ofApp::ofSoundStreamSetup(ofSoundStreamSettings& settings) {
 
 }
 
+inline float ofApp::averageTwo(float inA, float inB, float mix) {
+	return (1.0 - mix) * inA + (inB * mix);
+}
+
+inline float ofApp::lookup(float phase) {
+	float floatIndex = phase * (float)wavetableSize;
+	float remainderIndex = fmod(floatIndex, 1.0);
+	int intIndex = (int)floatIndex;
+	if (intIndex >= wavetableSize - 1) {
+		intIndex = wavetableSize - 2;
+	}
+	return averageTwo(wavetable[intIndex], wavetable[intIndex + 1], remainderIndex);
+}
+
 void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 	for (int a = 0; a < soundBuffer.getNumFrames(); a++) {
 		for (int b = 0; b < maxValue; b++) {
-			phases[b] += b;
-			phases[b] %= wavetableSize;
-			amplitudes[b] = wavetable[phases[b]];
+			//add FM
 			for (int c = 0; c < channels; c++) {
-				sample[c] += amplitudes[b] * volumes[b] * pan[b][c];
+				phases[b][c] += phaseIncrements[b];
+				phases[b][c] = fmod(phases[b][c], 1.0);
+				sample[c] += lookup(phases[b][c]) * volumes[b] * pan[b][c];
 			}
 		}
 		for (int b = 0; b < channels; b++) {
