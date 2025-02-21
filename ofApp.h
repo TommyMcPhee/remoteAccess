@@ -8,6 +8,7 @@ public:
 	static const int wavetableSize = 512, maxValue = 256, channels = 2, sampleRate = 48000, bufferSize = 256;
 	array<float, 16> fibonacci;
 	float series[maxValue][2];
+	float phaseIncrements[maxValue];
 	void setup();
 	array<float, wavetableSize> wavetable;
 	constexpr void fillWavetable();
@@ -17,7 +18,6 @@ public:
 	int number = 0, position = 0, modIndex = 0;
 	array<array<int, 4>, maxValue> values;
 	array<array<float, 2>, maxValue> phases;
-	array<float, maxValue> phaseIncrements;
 	array<int, maxValue> modulators;
 	inline float averageTwo(float inA, float inB, float mix);
 	inline float triangle(float phase, float skew);

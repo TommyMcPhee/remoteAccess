@@ -57,6 +57,7 @@ void ofApp::setup() {
 	frameBuffer.end();
 	shader.begin();
 	shader.setUniform1fv("series0", series[0], maxValue);
+	shader.setUniform1fv("phaseIncrements", phaseIncrements, maxValue);
 	shader.end();
 	streamSettings.setOutListener(this);
 	streamSettings.setApi(ofSoundDevice::Api::MS_WASAPI);
@@ -121,10 +122,11 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 
 void ofApp::setUniforms() {
 	shader.setUniform2f("window", window);
-	shader.setUniform1fv("xData", panValue, maxValue);
+	shader.setUniform1fv("panValue", panValue, maxValue);
 	shader.setUniform1fv("yData", amplitudes, maxValue);
 	shader.setUniform1fv("aData", modPanValue, maxValue);
 	shader.setUniform1fv("bData", indicies, maxValue);
+	shader.setUniform1f("amplitude", amplitude);
 }
 
 //--------------------------------------------------------------
