@@ -33,22 +33,20 @@ void ofApp::setup() {
 		}
 		series[a][0] = ((float)(modCount % modSeries) / (float)modSeries) + sumTerm;
 		series[a][1] = (float)modSeries;
-		phaseIncrements[maxValue - a - 1] = pow(0.5 * series[a][0] / fibonacci[(int)modSeries - 1], 2.0);
-		//phaseIncrements[a] = 0.1 / (float)(a + 1);
-		panValue[a] = 0.5;
-		envelopes[a] = 0.5;
+		phaseIncrements[maxValue - a - 1] = 0.5 * series[a][0] / fibonacci[(int)modSeries - 1];
+		increments[a] = 1.1;
+		envelopes[a] = 1.1;
 		amplitudes[a] = 0.0;
-		modPanValue[a] = 0.5;
-		modEnvelopes[a] = 0.5;
 		indicies[a] = 0.0;
+		panValue[a] = 0.5;
+		modPanValue[a] = 0.5;
 		for (int b = 0; b < 2; b++) {
 			pan[a][b] = 0.5;
 			modPan[a][b] = 0.5;
 		}
 		for (int b = 0; b < 4; b++) {
-			values[a][b] = -1;
+			values[a][b] = 0;
 		}
-		cout << phaseIncrements[a] << endl;
 		modCount++;
 	}
 
@@ -76,6 +74,10 @@ inline float ofApp::averageTwo(float inA, float inB, float mix) {
 	return (1.0 - mix) * inA + (inB * mix);
 }
 
+inline float ofApp::triangle(float phase, float skew) {
+	return (1.0 - abs(phase - skew)) * (2.0 - (abs(skew - 0.5) * 2.0));
+}
+
 inline float ofApp::lookup(float phase) {
 	float floatIndex = phase * (float)wavetableSize;
 	float remainderIndex = fmod(floatIndex, 1.0);
@@ -88,18 +90,29 @@ inline float ofApp::lookup(float phase) {
 
 void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 	for (int a = 0; a < soundBuffer.getNumFrames(); a++) {
-		for (int b = 0; b < maxValue; b++) {
-			amplitude++;
-			for (int c = 0; c < channels; c++) {
-				phases[b][c] += sample[phaseIncrements[modulators[b]]] * indicies[b] * modPan[b][c] + phaseIncrements[b];
-				phases[b][c] = fmod(phases[b][c], 1.0);
-				samples[b][c] = lookup(phases[b][c]) * pan[b][c];
-				sample[c] += samples[b][c] * amplitudes[b];
+		if (a % (int)amplitude == 0) {
+			for (int b = 0; b < maxValue; b++) {
+				if (amplitudes[b] >= 0.0 || indicies[b] >= 0.0) {
+					if (envelopes[b] <= 1.0) {
+						amplitude++;
+						envelopes[b] += increments[b];
+						volume = triangle(envelopes[b], panValue[b]);
+					}
+					else {
+						volume = 0.0;
+					}
+					for (int c = 0; c < channels; c++) {
+						phases[b][c] += sample[phaseIncrements[modulators[b]]] * pow(triangle(envelopes[b], modPanValue[b]), indicies[b]) * indicies[b] * modPan[b][c] + phaseIncrements[b];
+						phases[b][c] = fmod(phases[b][c], 1.0);
+						samples[b][c] = triangle(phases[b][c], averageTwo(panValue[b], modPanValue[b], indicies[b])) * pan[b][c];
+						sample[c] += samples[b][c] * amplitudes[b] * volume;
+					}
 				}
+			}
 		}
 		for (int b = 0; b < channels; b++) {
-			sample[b] = (sample[b] + 1.0) / amplitude;
-			soundBuffer[a * channels + b] = sample[b];
+			soundBuffer[a * channels + b] = averageTwo(sample[b], lastSample[b], amplitude / 256.0);
+			lastSample[b] = sample[b];
 			sample[b] = 0.0;
 			amplitude = 1.0;
 		}
@@ -108,10 +121,10 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 
 void ofApp::setUniforms() {
 	shader.setUniform2f("window", window);
-	shader.setUniform1fv("xData", xData, maxValue);
-	shader.setUniform1fv("yData", yData, maxValue);
-	shader.setUniform1fv("aData", aData, maxValue);
-	shader.setUniform1fv("bData", bData, maxValue);
+	shader.setUniform1fv("xData", panValue, maxValue);
+	shader.setUniform1fv("yData", amplitudes, maxValue);
+	shader.setUniform1fv("aData", modPanValue, maxValue);
+	shader.setUniform1fv("bData", indicies, maxValue);
 }
 
 //--------------------------------------------------------------
@@ -150,45 +163,41 @@ void ofApp::keyPressed(int key) {
 
 void ofApp::updateState(int number, int position) {
 	cout << number << " " << position << endl;
-	cout << "amplitude" << amplitude << endl;
-	values[number][position] += 1;
-	//float updateValue = series[values[number][position] % 256][0];
+	number %= maxValue;
+	position %= 4;
 	switch (position) {
 	case 0:
-		panValue[number] = series[values[number][0] % 256][0];
+		panValue[number] = series[values[number][0] % maxValue][0];
 		pan[number][0] = sqrt(panValue[number]);
 		pan[number][1] = sqrt(1.0 - panValue[number]);
-		envelopes[number] = abs(0.5 - panValue[number]) * 2.0;
-		//xData[number] = updateValue;
 		break;
 	case 1:
-		if (values[number][1] < 256) {
+		if (values[number][1] < maxValue) {
 			modIndex = number;
 			amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
+			increments[number] = pow(phaseIncrements[values[number][1]], 2) / (float)(pow(values[number][0] + 1, 2));
+			envelopes[number] = 0.0;
 		}
 		else {
 			amplitudes[number] = 0.0;
 		}
-		//yData[number] = pow(updateValue * phaseIncrements[number], 0.25);
 		break;
 	case 2:
-		modPanValue[number] = series[values[number][2] % 256][0];
+		modPanValue[number] = series[values[number][2] % maxValue][0];
 		modPan[number][0] = sqrt(panValue[number]);
-		modPan[number][1] = sqrt(1.0 - panValue[number]);
-		modEnvelopes[number] = abs(0.5 - modPanValue[number]) * 2.0;
-		//aData[number] = updateValue;
+		modPan[number][1] = sqrt(panValue[number]);
 		break;
 	case 3:
-		if (values[number][1] < 256) {
+		if (values[number][1] < maxValue) {
 			modulators[modIndex] = number;
 			indicies[number] = phaseIncrements[values[number][1]];
 		}
 		else {
 			indicies[number] = 0.0;
 		}
-		//bData[number] = pow(updateValue * phaseIncrements[number], 0.25);;
 		break;
 	}
+	values[number][position] += 1;
 }
 
 //--------------------------------------------------------------
