@@ -22,20 +22,18 @@ public:
 	inline float averageTwo(float inA, float inB, float mix);
 	inline float triangle(float phase, float skew);
 	inline float lookup(float phase);
-	float amplitudes[maxValue], panValue[maxValue], indicies[maxValue], modPanValue[maxValue];
-	array<float, maxValue> envelopes, increments;
+	array<float, maxValue> amplitudes, panValue, indicies, modPanValue, envelopes, increments, volumes;
 	array<array<float, channels>, maxValue> pan, modPan;
 	array<array<float, channels>, maxValue> samples;
 	array<float, channels> sample, lastSample;
-	float maxRoot, amplitude = 1.0, volume = 0.0, width, height, timer = 0.0, time = 1.0, recipriocalTime = 1.0 / time;
+	float maxRoot, amplitude = 1.0, timer = 0.0, time = 1.0, recipriocalTime = 1.0 / time, width, height;
 	void audioOut(ofSoundBuffer& soundBuffer);
 	ofVec2f window;
+	float data[maxValue * 4];
 	ofFbo frameBuffer;
 	ofShader shader;
 	void setUniforms();
 	void draw();
 	void updateState(int number, int position);
 	void keyPressed(int key);
-
-	float aData[1024];
 };

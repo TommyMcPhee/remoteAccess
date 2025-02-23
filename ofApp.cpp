@@ -49,9 +49,6 @@ void ofApp::setup() {
 		}
 		modCount++;
 	}
-	for (int a = 0; a < 1024; a++) {
-		aData[a] = (float)a / 1024.0;
-	}
 	shader.load("remoteAccess");
 	frameBuffer.allocate(ofGetScreenWidth(), ofGetScreenHeight());
 	frameBuffer.begin();
@@ -100,16 +97,16 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 					if (envelopes[b] <= 1.0) {
 						amplitude++;
 						envelopes[b] += increments[b];
-						volume = triangle(envelopes[b], panValue[b]);
+						volumes[b] = triangle(envelopes[b], panValue[b]);
 					}
 					else {
-						volume = 0.0;
+						volumes[b] = 0.0;
 					}
 					for (int c = 0; c < channels; c++) {
 						phases[b][c] += sample[phaseIncrements[modulators[b]]] * pow(triangle(envelopes[b], modPanValue[b]), indicies[b]) * indicies[b] * modPan[b][c] + phaseIncrements[b];
 						phases[b][c] = fmod(phases[b][c], 1.0);
 						samples[b][c] = triangle(phases[b][c], averageTwo(panValue[b], modPanValue[b], indicies[b])) * pan[b][c];
-						sample[c] += samples[b][c] * amplitudes[b] * volume;
+						sample[c] += samples[b][c] * amplitudes[b] * volumes[b];
 					}
 				}
 			}
@@ -124,12 +121,12 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 }
 
 void ofApp::setUniforms() {
+	for (int a = 0; a < maxValue; a++) {
+		data[a * 4 + 1] = volumes[a];
+		data[a * 4 + 3] = 1.0 - indicies[a];
+	}
 	shader.setUniform2f("window", window);
-	shader.setUniform1fv("panValue", panValue, maxValue);
-	shader.setUniform1fv("yData", amplitudes, maxValue);
-	shader.setUniform4fv("aData", aData, maxValue);
-	shader.setUniform1fv("bData", indicies, maxValue);
-	shader.setUniform1f("amplitude", amplitude);
+	shader.setUniform4fv("data", data, maxValue);
 }
 
 //--------------------------------------------------------------
@@ -177,6 +174,7 @@ void ofApp::updateState(int number, int position) {
 	switch (position) {
 	case 0:
 		panValue[number] = series[values[number][0] % maxValue][0];
+		data[number * 4] = panValue[number];
 		pan[number][0] = sqrt(panValue[number]);
 		pan[number][1] = sqrt(1.0 - panValue[number]);
 		break;
@@ -199,6 +197,7 @@ void ofApp::updateState(int number, int position) {
 		break;
 	case 2:
 		modPanValue[number] = series[values[number][2] % maxValue][0];
+		data[number * 4 + 2] = modPanValue[number];
 		modPan[number][0] = sqrt(panValue[number]);
 		modPan[number][1] = sqrt(1.0 - panValue[number]);
 		break;
