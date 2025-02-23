@@ -101,7 +101,8 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 						volumes[b] = 0.0;
 					}
 					for (int c = 0; c < channels; c++) {
-						phases[b][c] += sample[phaseIncrements[modulators[b]]] * pow(triangle(envelopes[b], modPanValue[b]), indicies[b] + minimumFloat) * indicies[b] * modPan[b][c] + phaseIncrements[b];
+						//phases[b][c] += sample[phaseIncrements[modulators[b]]] * pow(triangle(envelopes[b], modPanValue[b]), indicies[b]) * indicies[b] * modPan[b][c] + phaseIncrements[b];
+						phases[b][c] += sample[phaseIncrements[modulators[b]]] * indicies[b] * modPan[b][c] + phaseIncrements[b];
 						phases[b][c] = fmod(phases[b][c], 1.0);
 						samples[b][c] = triangle(phases[b][c], averageTwo(panValue[b], modPanValue[b], indicies[b])) * pan[b][c];
 						sample[c] += samples[b][c] * amplitudes[b] * volumes[b];
@@ -167,7 +168,6 @@ void ofApp::keyPressed(int key) {
 }
 
 void ofApp::updateState(int number, int position) {
-	cout << amplitude << endl;
 	number %= maxValue;
 	position %= 4;
 	switch (position) {
@@ -187,8 +187,7 @@ void ofApp::updateState(int number, int position) {
 			else {
 				increments[number] = nextIncrement;
 			}
-			//amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
-			amplitudes[number] = 1.0;
+			amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
 			envelopes[number] = 0.0;
 		}
 		else {
@@ -204,13 +203,11 @@ void ofApp::updateState(int number, int position) {
 		data[number * 4 + 2] = modPanValue[number];
 		modPan[number][0] = sqrt(panValue[number]);
 		modPan[number][1] = sqrt(1.0 - panValue[number]);
-		if (values[number][1] < maxValue) {
+		if (values[number][3] < maxValue) {
 			modulators[address] = number;
-			//indicies[address] = series[values[commandPulse][2]];
-			indicies[address] = 1.0;
-		}
-		else {
-			indicies[address] = 0.0;
+			//indicies[address] = 0.0;
+			indicies[address] = series[values[commandPulse][2]] * phaseIncrements[values[number][3]];
+			cout << indicies[address] << endl;
 		}
 		break;
 	}
