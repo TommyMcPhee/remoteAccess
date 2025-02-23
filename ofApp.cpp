@@ -9,6 +9,7 @@ constexpr void ofApp::fillWavetable() {
 
 void ofApp::setup() {
 	fillWavetable();
+	minimumFloat = std::numeric_limits<float>::min();
 	int fibonacciA = 1, fibonacciB = 1, fibonacciC = 1;
 	for (int a = 0; a < fibonacci.size(); a++) {
 		fibonacci[a] = fibonacciC;
@@ -31,9 +32,8 @@ void ofApp::setup() {
 			}
 			modCount = 0;
 		}
-		series[a][0] = ((float)(modCount % modSeries) / (float)modSeries) + sumTerm;
-		series[a][1] = (float)modSeries;
-		phaseIncrements[maxValue - a - 1] = 0.5 * series[a][0] / fibonacci[(int)modSeries - 1];
+		series[a] = ((float)(modCount % modSeries) / (float)modSeries) + sumTerm;
+		phaseIncrements[maxValue - a - 1] = 0.5 * series[a] / fibonacci[(int)modSeries - 1];
 		increments[a] = 1.1;
 		envelopes[a] = 1.1;
 		amplitudes[a] = 0.0;
@@ -55,8 +55,6 @@ void ofApp::setup() {
 	ofClear(0, 0, 0, 255);
 	frameBuffer.end();
 	shader.begin();
-	shader.setUniform1fv("series0", series[0], maxValue);
-	shader.setUniform1fv("phaseIncrements", phaseIncrements, maxValue);
 	shader.end();
 	streamSettings.setOutListener(this);
 	streamSettings.setApi(ofSoundDevice::Api::MS_WASAPI);
@@ -103,7 +101,7 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 						volumes[b] = 0.0;
 					}
 					for (int c = 0; c < channels; c++) {
-						phases[b][c] += sample[phaseIncrements[modulators[b]]] * pow(triangle(envelopes[b], modPanValue[b]), indicies[b]) * indicies[b] * modPan[b][c] + phaseIncrements[b];
+						phases[b][c] += sample[phaseIncrements[modulators[b]]] * pow(triangle(envelopes[b], modPanValue[b]), indicies[b] + minimumFloat) * indicies[b] * modPan[b][c] + phaseIncrements[b];
 						phases[b][c] = fmod(phases[b][c], 1.0);
 						samples[b][c] = triangle(phases[b][c], averageTwo(panValue[b], modPanValue[b], indicies[b])) * pan[b][c];
 						sample[c] += samples[b][c] * amplitudes[b] * volumes[b];
@@ -169,45 +167,50 @@ void ofApp::keyPressed(int key) {
 }
 
 void ofApp::updateState(int number, int position) {
+	cout << amplitude << endl;
 	number %= maxValue;
 	position %= 4;
 	switch (position) {
 	case 0:
-		panValue[number] = series[values[number][0] % maxValue][0];
-		data[number * 4] = panValue[number];
-		pan[number][0] = sqrt(panValue[number]);
-		pan[number][1] = sqrt(1.0 - panValue[number]);
+		addressPulse = number;
 		break;
 	case 1:
 		if (values[number][1] < maxValue) {
-			modIndex = number;
-			float nextIncrement = pow(phaseIncrements[number] * phaseIncrements[values[number][1]], amplitude);
+			panValue[number] = series[addressPulse];
+			data[number * 4] = panValue[number];
+			pan[number][0] = sqrt(panValue[number]);
+			pan[number][1] = sqrt(1.0 - panValue[number]);
+			float nextIncrement = pow(phaseIncrements[number] * phaseIncrements[values[addressPulse][0]], amplitude);
 			if (nextIncrement <= recipriocalTime) {
 				increments[number] = recipriocalTime;
 			}
 			else {
 				increments[number] = nextIncrement;
 			}
-			amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
+			//amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
+			amplitudes[number] = 1.0;
 			envelopes[number] = 0.0;
 		}
 		else {
 			amplitudes[number] = 0.0;
 		}
+		address = number;
 		break;
 	case 2:
-		modPanValue[number] = series[values[number][2] % maxValue][0];
+		commandPulse = number;
+		break;
+	case 3:
+		modPanValue[number] = series[commandPulse];
 		data[number * 4 + 2] = modPanValue[number];
 		modPan[number][0] = sqrt(panValue[number]);
 		modPan[number][1] = sqrt(1.0 - panValue[number]);
-		break;
-	case 3:
 		if (values[number][1] < maxValue) {
-			modulators[modIndex] = number;
-			indicies[number] = phaseIncrements[values[number][1]];
+			modulators[address] = number;
+			//indicies[address] = series[values[commandPulse][2]];
+			indicies[address] = 1.0;
 		}
 		else {
-			indicies[number] = 0.0;
+			indicies[address] = 0.0;
 		}
 		break;
 	}

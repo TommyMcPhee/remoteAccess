@@ -20,8 +20,9 @@ float modQuotient(float inA, float modValue){
 void main()
 {
     vec2 normalized = gl_FragCoord.xy / window;
-    vec2 position = vec2(0.0);
-    float positionFloat = 0.0;
+    vec4 position = vec4(0.0);
+    float colorPosition = 0.0;
+    float whitePosition = 0.0;
     vec3 newColor = vec3(0.0);
     float floatIncrement = 0.0;
     float red = 0.0;
@@ -38,11 +39,14 @@ void main()
         floatIncrement++;
         position.x = beam(normalized.x, data[increment].x, amplitude);
         position.y = beam(normalized.y, data[increment].y, amplitude);
-        positionFloat = position.x * position.y * data[increment].y;
-        red = positionFloat * modQuotient(floatIncrement, amplitude / 3.0) / amplitude;
-        green = positionFloat * modQuotient(floatIncrement, amplitude / 2.0) / amplitude;
-        blue = positionFloat * modQuotient(floatIncrement, amplitude) / amplitude;
-        white = red * green * blue * data[increment].w / index;
+        position.z = beam(normalized.x, data[increment].z, index);
+        position.w = beam(normalized.y, data[increment].w, index);
+        colorPosition = position.x * position.y * data[increment].y;
+        whitePosition = position.z * position.w * data[increment].w;
+        red = colorPosition * modQuotient(floatIncrement, 4.0) / amplitude;
+        green = colorPosition * modQuotient(floatIncrement, 16.0) / amplitude;
+        blue = colorPosition * modQuotient(floatIncrement, 32.0) / amplitude;
+        white = red * green * blue * whitePosition;
         newColor.r += red - white;
         newColor.g += green - white;
         newColor.b += blue - white;
