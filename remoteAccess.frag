@@ -10,7 +10,7 @@ uniform float[256] series0;
 uniform float[256] phaseIncrements;
 uniform float[256] panValue;
 uniform float[256] amplitudes;
-uniform float[256] aData;
+uniform vec4[256] aData;
 uniform float[256] bData;
 uniform float amplitude;
 
@@ -39,6 +39,7 @@ void main()
     float luminence = 0.0;
     for(int increment = 0; increment < 256; increment++){
         floatIncrement++;
+        /*
         //layerAmplitude = amplitudes[increment] / 256.0;
         layerAmplitude = mod(panValue[increment], 1.0 / 256.0);
         position.x = beam(normalized.x, panValue[increment], amplitude);
@@ -53,6 +54,8 @@ void main()
         color.r += red - (white * bData[increment]);
         color.g += green - (white * bData[increment]);
         color.b += blue - (white * bData[increment]);
+        */
+        color.b += aData[increment].b / 256.0;
     }
     outputColor = vec4(color.r, color.g, color.b, 1.0);
 }

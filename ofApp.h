@@ -36,4 +36,6 @@ public:
 	void draw();
 	void updateState(int number, int position);
 	void keyPressed(int key);
+
+	float aData[1024];
 };

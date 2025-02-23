@@ -49,7 +49,9 @@ void ofApp::setup() {
 		}
 		modCount++;
 	}
-
+	for (int a = 0; a < 1024; a++) {
+		aData[a] = (float)a / 1024.0;
+	}
 	shader.load("remoteAccess");
 	frameBuffer.allocate(ofGetScreenWidth(), ofGetScreenHeight());
 	frameBuffer.begin();
@@ -124,7 +126,7 @@ void ofApp::setUniforms() {
 	shader.setUniform2f("window", window);
 	shader.setUniform1fv("panValue", panValue, maxValue);
 	shader.setUniform1fv("yData", amplitudes, maxValue);
-	shader.setUniform1fv("aData", modPanValue, maxValue);
+	shader.setUniform4fv("aData", aData, maxValue);
 	shader.setUniform1fv("bData", indicies, maxValue);
 	shader.setUniform1f("amplitude", amplitude);
 }
@@ -164,7 +166,7 @@ void ofApp::keyPressed(int key) {
 }
 
 void ofApp::updateState(int number, int position) {
-	cout << number << " " << position << endl;
+	//cout << number << " " << position << endl;
 	number %= maxValue;
 	position %= 4;
 	switch (position) {
@@ -176,8 +178,13 @@ void ofApp::updateState(int number, int position) {
 	case 1:
 		if (values[number][1] < maxValue) {
 			modIndex = number;
-			amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
-			increments[number] = pow(phaseIncrements[values[number][1]], 2) / (float)(pow(values[number][0] + 1, 2));
+			increments[number] = pow(phaseIncrements[number] * phaseIncrements[values[number][1]], amplitude);
+			if (increments[number] <= 0.0) {
+				amplitudes[number] = 0.0;
+			}
+			else {
+				amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
+			}
 			envelopes[number] = 0.0;
 		}
 		else {
