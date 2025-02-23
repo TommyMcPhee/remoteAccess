@@ -93,6 +93,7 @@ inline float ofApp::lookup(float phase) {
 
 void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 	for (int a = 0; a < soundBuffer.getNumFrames(); a++) {
+		timer++;
 		if (a % (int)amplitude == 0) {
 			for (int b = 0; b < maxValue; b++) {
 				if (amplitudes[b] >= 0.0 || indicies[b] >= 0.0) {
@@ -158,6 +159,11 @@ void ofApp::keyPressed(int key) {
 		updateState(number, position);
 		number = 0;
 		position = 0;
+		if (timer > time) {
+			time = timer;
+			recipriocalTime = 1.0 / time;
+			timer = 0;
+		}
 	}
 	if (key > 47 && key < 59) {
 		number *= 10;
@@ -166,7 +172,6 @@ void ofApp::keyPressed(int key) {
 }
 
 void ofApp::updateState(int number, int position) {
-	//cout << number << " " << position << endl;
 	number %= maxValue;
 	position %= 4;
 	switch (position) {
@@ -178,13 +183,14 @@ void ofApp::updateState(int number, int position) {
 	case 1:
 		if (values[number][1] < maxValue) {
 			modIndex = number;
-			increments[number] = pow(phaseIncrements[number] * phaseIncrements[values[number][1]], amplitude);
-			if (increments[number] <= 0.0) {
-				amplitudes[number] = 0.0;
+			float nextIncrement = pow(phaseIncrements[number] * phaseIncrements[values[number][1]], amplitude);
+			if (nextIncrement <= recipriocalTime) {
+				increments[number] = recipriocalTime;
 			}
 			else {
-				amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
+				increments[number] = nextIncrement;
 			}
+			amplitudes[number] = phaseIncrements[values[number][1]] * 2.0;
 			envelopes[number] = 0.0;
 		}
 		else {
@@ -194,7 +200,7 @@ void ofApp::updateState(int number, int position) {
 	case 2:
 		modPanValue[number] = series[values[number][2] % maxValue][0];
 		modPan[number][0] = sqrt(panValue[number]);
-		modPan[number][1] = sqrt(panValue[number]);
+		modPan[number][1] = sqrt(1.0 - panValue[number]);
 		break;
 	case 3:
 		if (values[number][1] < maxValue) {

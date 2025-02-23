@@ -27,7 +27,7 @@ public:
 	array<array<float, channels>, maxValue> pan, modPan;
 	array<array<float, channels>, maxValue> samples;
 	array<float, channels> sample, lastSample;
-	float maxRoot, amplitude = 1.0, volume = 0.0, width, height;
+	float maxRoot, amplitude = 1.0, volume = 0.0, width, height, timer = 0.0, time = 1.0, recipriocalTime = 1.0 / time;
 	void audioOut(ofSoundBuffer& soundBuffer);
 	ofVec2f window;
 	ofFbo frameBuffer;
