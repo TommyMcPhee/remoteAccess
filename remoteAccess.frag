@@ -20,6 +20,8 @@ float modQuotient(float inA, float modValue){
 void main()
 {
     vec2 normalized = gl_FragCoord.xy / window;
+    float amplitude = 0.0;
+    float index = 0.0;
     vec4 position = vec4(0.0);
     float colorPosition = 0.0;
     float whitePosition = 0.0;
@@ -29,8 +31,8 @@ void main()
     float green = 0.0;
     float blue = 0.0;
     float white = 0.0;
-    float amplitude = 0.0;
-    float index = 0.0;
+    float feedbackPosition = 0.0;
+    vec3 oldColor = texture2DRect(tex0, texCoordVarying).rgb;
     for(int increment = 0; increment < 256; increment++){
             amplitude += data[increment].y;
             index += data[increment].w;
@@ -46,10 +48,14 @@ void main()
         red = colorPosition * modQuotient(floatIncrement, 4.0) / amplitude;
         green = colorPosition * modQuotient(floatIncrement, 16.0) / amplitude;
         blue = colorPosition * modQuotient(floatIncrement, 32.0) / amplitude;
-        white = red * green * blue * whitePosition;
+        white = red * green * blue * whitePosition / index;
+        feedbackPosition += white * whitePosition;
+        /*
         newColor.r += red - white;
         newColor.g += green - white;
         newColor.b += blue - white;
+        */
+        newColor += vec3(red, green, blue);
     }
-    outputColor = vec4(newColor, 1.0);
+    outputColor = vec4(mix(newColor, oldColor * feedbackPosition, 0.5), 1.0);
 }
