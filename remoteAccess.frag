@@ -1,7 +1,5 @@
 #version 150
 
-#define TWO_PI 6.283185307179586476925286766559
-
 uniform sampler2DRect tex0;
 in vec2 texCoordVarying;
 out vec4 outputColor;
