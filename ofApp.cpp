@@ -96,6 +96,7 @@ void ofApp::audioOut(ofSoundBuffer& soundBuffer) {
 						amplitude++;
 						envelopes[b] += increments[b];
 						volumes[b] = triangle(envelopes[b], panValue[b]);
+						timbres[b] = triangle(envelopes[b], modPanValue[b]);
 					}
 					else {
 						volumes[b] = 0.0;
@@ -205,8 +206,7 @@ void ofApp::updateState(int number, int position) {
 		modPan[number][1] = sqrt(1.0 - panValue[number]);
 		if (values[number][3] < maxValue) {
 			modulators[address] = number;
-			//indicies[address] = 0.0;
-			indicies[address] = series[values[commandPulse][2]] * phaseIncrements[values[number][3]];
+			indicies[address] = series[values[number][3]];
 			cout << indicies[address] << endl;
 		}
 		break;

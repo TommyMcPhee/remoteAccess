@@ -8,7 +8,7 @@ public:
 	static const int wavetableSize = 512, maxValue = 256, channels = 2, sampleRate = 48000, bufferSize = 256;
 	float minimumFloat, maxRoot, amplitude = 1.0, timer = 0.0, time = 1.0, recipriocalTime = 1.0 / time, width, height;
 	array<float, 16> fibonacci;
-	array<float, maxValue> series, amplitudes, panValue, indicies, modPanValue, envelopes, increments, volumes;
+	array<float, maxValue> series, amplitudes, panValue, envelopes, increments, timbres, indicies, modPanValue, volumes;
 	float phaseIncrements[maxValue];
 	void setup();
 	array<float, wavetableSize> wavetable;
