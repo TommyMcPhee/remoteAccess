@@ -20,7 +20,7 @@ float beam(float coordinates, float location, float power){
 }
 
 float modQuotient(float inA, float modValue){
-    return mod(inA, modValue) / modValue;
+    return (0.5 / modValue) + mod(inA, modValue) / modValue;
 }
 
 void main()
