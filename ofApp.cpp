@@ -169,6 +169,7 @@ void ofApp::keyPressed(int key) {
 }
 
 void ofApp::updateState(int number, int position) {
+	cout << number << " " << position << endl;
 	number %= maxValue;
 	position %= 4;
 	switch (position) {
@@ -207,7 +208,6 @@ void ofApp::updateState(int number, int position) {
 		if (values[number][3] < maxValue) {
 			modulators[address] = number;
 			indicies[address] = series[values[number][3]];
-			cout << indicies[address] << endl;
 		}
 		break;
 	}
